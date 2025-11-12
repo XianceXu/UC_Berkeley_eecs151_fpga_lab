@@ -1,13 +1,48 @@
-# UC_Berkeley_eecs151_fpga_lab
-This project is one of my berkeley course projects, we took about 2 month to finish that, with my lovely parter - Donaldo Wilson... 
+# Some available commands
 
-Our ffnal design ended up using a total of 5 stages. Gaining insight from the 61C cpu, we
-split our stages into Instruction Fetch, Instruction Decode, Execute, Memory and Writeback
-stages. Our memory uses both synchronous reads and writes. To take advantage of
-this register-like behavior, we place our instruction memory between the Decode and Execute
-stage. We also place data memory and I/O in between our Execute and Memory stages.
-Originally, our three stage cpu design could not handle any increase in clock frequency. This
-is the main reason why we decided to use no forwarding to decrease our critical paths for
-a 5 stage version. For the sake of simplicity, we decided to delete all forwarding paths to
-maximize our frequency. After these additions, we found that our current critical path is in
-our Execute stage, between our immediate generated register and memory.
+## Simulation
+
+### Regular Testbenches
+
+#### iverilog
+```bash
+make sim/cpu_tb.fst
+# logfile
+cat sim/cpu_tb.log
+# waveform
+gtkwave sim/cpu_tb.fst &
+```
+
+#### VCS
+```bash
+make sim/cpu_tb.vpd
+# logfile
+cat sim/cpu_tb.log
+# waveform
+dve -vpd sim/cpu_tb.vpd &
+```
+
+### ISA Tests
+```bash
+make isa-tests
+gtkwave sim/isa/rv32ui-p-add.fst &
+```
+
+- Clean simulation outputs: `make clean-sim`
+- Forcefully re-run a testbench: `make -B sim/cpu_tb.fst`
+
+## CAD Flow
+- Lint RTL with verilator: `make lint`
+- Open Vivado GUI: `make vivado`
+- Elaborate and open circuit in GUI: `make elaborate`
+- Synthesis: `make synth`
+    - Log file: `build/synth/synth.log`
+- Place, Route, Bitstream Generation (Implementation): `make impl`
+    - Log file: `build/impl/impl.log`
+- Program FPGA: `make program`
+- Force program FPGA (don't rebuild bitstream if RTL changed): `make program-force`
+- Clean CAD flow outputs: `make clean-build`
+
+## Runtime
+- Run screen to open UART connection: `make screen`
+    - To exit screen: Ctrl-A Shift-K (then press 'y')
