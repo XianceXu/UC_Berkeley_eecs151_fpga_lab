@@ -1,0 +1,60 @@
+1. How many stages is the datapath you've drawn?
+    - three because that is the instructions...
+
+How do you handle ALU → ALU hazards?
+    ex: addi x1, x2, 100
+        addi x2, x1, 100
+    - We handle it by selectively fowarding the result of the alu back into itself
+
+How do you handle ALU → MEM hazards?
+    ex: addi x1, x2, 100
+        sw x1, 0(x3)
+    - We handle it by selectively fowarding the result of the alu back into itself and then save into data memory
+
+How do you handle MEM → ALU hazards?
+    ex: lw x1, 0(x3)
+        addi x1, x1, 100
+    - We can stall for one cycle to wait for the word to load. then we direct the signal back to the alu
+
+How do you handle MEM → MEM hazards?
+    ex: lw x1, 0(x2)
+        sw x1, 4(x2)
+    - We can foward the value from load straight into the control of the alu
+    ex: lw x1, 0(x2)
+        sw x3, 0(x1)
+    - Since there is a collision, we can stall for one cycle and then read the forward value of the memory registers
+
+Do you need special handling for 2 cycle apart hazards?
+    ex: addi x1, x2, 100
+        nop
+        addi x1, x1, 100
+    - Only for jumping hazards because we need to use alu value back into the 1st stage(pc reg)
+
+How do you handle branch control hazards? (What is the mispredict latency, what prediction scheme are you using, 
+are you just injecting NOPs until the branch is resolved, what about data hazards in the branch?)
+    - We handle them by  assuming branch not taken. if branch is taken, we can delete current instruction and start with branch instruction.
+        The mispredict latency is good because for loops usually dont branch and we have a 50% chance on if/else.  
+        For data hazards in the branch, we can treat them as a alu-to-alu hazard and at the first stage, we look for control hazard 
+        and deal according to type of hazard
+
+How do you handle jump control hazards?  Consider jal and jalr separately. What optimizations can be made to special-case handle jal?
+    - We handle jump control hazards by stalling for one cycle to add our alu value into the first stage pc register
+     *For the Jalr instruction, we need to wait for 2 cycles because we need to load in the address before routing to first stage pc
+     *For the Jal instruction, we only need to wait for 1 cycle to link alu value to pc instruction register
+
+What is the most likely critical path in your design?
+    - The critical path is most likely in our excute stage that goes through the register file and the alu.
+
+Where do the UART modules, instruction, and cycle counters go? How are you going to drive uart_tx_data_in_valid 
+and uart_rx_data_out_ready (give logic expressions)?
+    - They go in our control logic, which will be pipelined to follow the instruction as it goes through the cpu.  
+        it will be driven by input instuction and the branch comparater
+
+What is the role of the CSR register? Where does it go?
+    - the role of the CSR register is to store the status of the cpu and handle checks in the background
+      It shall go next to the DMEM as it has a similar function
+
+When do we read from BIOS for instructions? When do we read from IMem for instructions? How do we switch from BIOS address space to IMem address space? 
+In which case can we write to IMem, and why do we need to write to IMem? How do we know if a memory instruction is intended for DMem or any IO device?
+    - We read from BIOS when we are loading and initalized the operating system, or when PC[30] is 0.  we read from Imem in all other cases which is when PC[30] is 1.
+        We write to IMEM when we are reading from the bios and loading in instructions. We need to do this to load in our specific program. we specify the memory by PC[30]
