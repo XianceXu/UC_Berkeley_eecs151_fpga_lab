@@ -1,8 +1,0 @@
-module mux #(parameter WIDTH = 32) (
-    input  logic sel,
-    input  logic [WIDTH-1:0] alu_out,
-    input  logic [WIDTH-1:0] pc_plus4,
-    output logic [WIDTH-1:0] out
-);
-    assign out = sel ? pc_plus4 : alu_out;
-endmodule
